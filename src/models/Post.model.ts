@@ -1,8 +1,12 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import { PostModel } from "../model";
 
-
 const postSchema = new Schema<PostModel>({
+    userId:{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+        required:true
+    },
     title:{
         type:String,
         required:true
@@ -21,7 +25,11 @@ const postSchema = new Schema<PostModel>({
     dislikes:{
         type:Number,
         default:0
-    }
+    },
+    comments:[{
+        type:Schema.Types.ObjectId,
+        ref:"Comment"
+    }]
 },{
     timestamps:true
 })

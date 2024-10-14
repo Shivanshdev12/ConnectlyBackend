@@ -3,6 +3,7 @@ import { User } from "../models/User.model";
 import ApiError from "../utils/ApiError";
 import jwt from "jsonwebtoken";
 import { CustomError } from "../model";
+import ApiResponse from "../utils/ApiResponse";
 
 const generateAuthToken = async(userId:object)=>{
     const id = await User.findById(userId);
@@ -33,7 +34,7 @@ export const registerUser = async (req: Request,res: Response)=>{
             throw new ApiError(400, "User registration failed");
         }
         res.status(200)
-        .json("User registered!");
+        .json(new ApiResponse("User registered",{},200));
     }
     catch(err){
         const customErr = err as CustomError;
@@ -60,15 +61,13 @@ export const loginUser = async (req:Request, res:Response)=>{
             throw new ApiError(400,"Password not valid");
         }
         const token = await generateAuthToken(user._id);
+        const data = {
+            user,
+            token
+        }
         res.status(200)
         .cookie("accessToken",token)
-        .json({
-            data:{
-                user,
-                token
-            },
-            message:"User logged In!"
-        })
+        .json(new ApiResponse("User loggedIn",data,200));
     }
     catch(err){
         const customErr = err as CustomError;

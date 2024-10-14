@@ -1,4 +1,5 @@
 import { Request } from "express";
+import { Schema, Types } from "mongoose";
 
 export interface Register{
     firstName:string;
@@ -8,12 +9,19 @@ export interface Register{
     isPasswordCorrect:(password:string)=>{}
 }
 
+export interface CommentModel{
+    userId:Types.ObjectId,
+    comments:string,
+}
+
 export interface PostModel{
+    userId:Types.ObjectId,
     title:string,
     description:string,
     image:string,
     likes:number,
-    dislikes:number
+    dislikes:number,
+    comments:Types.ObjectId[]
 }
 
 export interface UserRequest extends Request{
