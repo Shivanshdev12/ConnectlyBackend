@@ -161,3 +161,16 @@ export const dislikePost = async(req:UserRequest, res:Response)=>{
         }
     }
 }
+
+export const savePost = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(400, "Unauthorized request");
+        }
+        const {postId} = req.body;
+    }
+    catch(err){
+
+    }
+}
