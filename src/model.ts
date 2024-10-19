@@ -2,6 +2,7 @@ import { Request } from "express";
 import { Schema, Types } from "mongoose";
 
 export interface Register{
+    avatar:String,
     firstName:string;
     lastName:string;
     email:string;
@@ -12,6 +13,7 @@ export interface Register{
 export interface CommentModel{
     userId:Types.ObjectId,
     comments:string,
+    replies:Types.ObjectId[]
 }
 
 export interface PostModel{
@@ -25,6 +27,7 @@ export interface PostModel{
 }
 
 export interface UserRequest extends Request{
+    files?:any,
     user?:any
 }
 

@@ -11,7 +11,15 @@ const commentSchema = new Schema<CommentModel>(
             type:String,
             required:true,
             default:""
-        }
+        },
+        replies:[
+            {
+                type:Schema.Types.ObjectId,
+                ref:"User"
+            }
+        ]
+    },{
+        timestamps:true
     }
 )
 

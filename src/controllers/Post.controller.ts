@@ -4,6 +4,7 @@ import { Post } from "../models/Post.model";
 import { Comment } from "../models/Comment.model";
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
+import { PostSaved } from "../models/PostSaved.model";
 
 export const createPost=async(req:UserRequest,res:Response)=>{
     try{
@@ -169,8 +170,39 @@ export const savePost = async(req:UserRequest, res:Response)=>{
             throw new ApiError(400, "Unauthorized request");
         }
         const {postId} = req.body;
+        if(!postId){
+            throw new ApiError(400, "Post Id is required");
+        }
+        let savedPosts = await PostSaved.findOne({userId});
+        if(savedPosts){
+            if(savedPosts.posts.includes(postId)){
+                throw new ApiError(400, "Post is already saved");
+            }
+            savedPosts.posts.push(postId);
+            await savedPosts.save();
+
+        }else{
+            const newSavedPost = new PostSaved({
+                userId,
+                posts:[postId]
+            });
+            await newSavedPost.save();
+        }
+        savedPosts = await PostSaved.findOne({userId});
+        const data = {
+            savedPosts
+        }
+        res.status(201)
+        .json(new ApiResponse("Post saved",data,201));
     }
     catch(err){
-
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }else{
+            res.status(500)
+            .json("Some error occured!");
+        }
     }
 }

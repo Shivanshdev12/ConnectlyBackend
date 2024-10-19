@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { User } from "../models/User.model";
 import ApiError from "../utils/ApiError";
 import jwt from "jsonwebtoken";
-import { CustomError } from "../model";
+import { CustomError, UserRequest } from "../model";
 import ApiResponse from "../utils/ApiResponse";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 
 const generateAuthToken = async(userId:object)=>{
     const id = await User.findById(userId);
@@ -24,12 +25,25 @@ const generateAuthToken = async(userId:object)=>{
 export const registerUser = async (req: Request,res: Response)=>{
     try{
         const {firstName, lastName, email, password} = req.body;
+        const avatarFiles = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+        const avatarLocalPath = avatarFiles?.avatar?.[0]?.path;        
+        if (!avatarLocalPath) {
+            throw new ApiError(400, "Avatar file is required")
+        }
+
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+        if (!avatar) {
+            throw new ApiError(400, "Avatar file is required")
+        }
+
         const user = await User.create({
+            avatar: avatar.url,
             firstName,
             lastName,
             email,
             password
         });
+       
         if(!user){
             throw new ApiError(400, "User registration failed");
         }
@@ -68,6 +82,32 @@ export const loginUser = async (req:Request, res:Response)=>{
         res.status(200)
         .cookie("accessToken",token)
         .json(new ApiResponse("User loggedIn",data,200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }
+        else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}
+
+export const getUser = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized user");
+        }
+        const user = await User.findById(userId).select("-password -accessToken");
+        const data = {
+            user
+        }
+        res.status(200)
+        .json(new ApiResponse("User Details fetched",data,200));
     }
     catch(err){
         const customErr = err as CustomError;

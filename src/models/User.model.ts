@@ -3,6 +3,11 @@ import bcrypt from "bcrypt";
 import { Register } from "../model";
 
 const userSchema = new Schema<Register>({
+    avatar:{
+        type:String,
+        required:false,
+        default:"",
+    },
     firstName:{
         type:String,
         required:true
