@@ -57,7 +57,14 @@ export const getPost = async (req: UserRequest, res: Response) => {
         }
 
         // Use populate to get the comments data for each post
-        const posts = await Post.find({}).populate('comments').populate('userId'); // Populating the 'comments' field
+        const posts = await Post.find({})
+        .populate({
+            path: 'comments',  // Populate comments
+            populate: {
+                path: 'replies',  // For each comment, populate replies
+            }
+        })
+        .populate('userId'); // Populating the 'comments' field
 
         if (!posts || posts.length === 0) {
             throw new ApiError(404, "No Posts found");

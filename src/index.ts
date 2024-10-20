@@ -21,9 +21,11 @@ connectDB();
 
 import userRouter from "./routes/User.routes";
 import postRouter from "./routes/Post.routes";
+import commentRouter from "./routes/Comment.routes";
 
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/posts",postRouter);
+app.use("/api/v1/comments", commentRouter);
 
 app.listen(`${process.env.PORT}`,()=>{
     try{
