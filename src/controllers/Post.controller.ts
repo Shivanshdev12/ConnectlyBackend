@@ -1,10 +1,11 @@
-import { Request, Response } from "express"
-import { CommentModel, CustomError, UserRequest } from "../model";
+import { Response } from "express"
+import { CustomError, UserRequest } from "../model";
 import { Post } from "../models/Post.model";
 import { Comment } from "../models/Comment.model";
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import { PostSaved } from "../models/PostSaved.model";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 
 export const createPost=async(req:UserRequest,res:Response)=>{
     try{
@@ -12,12 +13,22 @@ export const createPost=async(req:UserRequest,res:Response)=>{
         if(!userId){
             throw new ApiError(401, "Unauthorized request");
         }
-        const {title, description, image} = req.body;
+        const {title, description} = req.body;
+        const imageFiles = 
+        req.files as {[fieldname: string]: Express.Multer.File[]} | undefined;
+        const imageLocalPath = imageFiles?.image?.[0]?.path;
+        if(!imageLocalPath){
+            throw new ApiError(400, "Image not uploaded");
+        }
+        const postImage = await uploadOnCloudinary(imageLocalPath);
+        if(!postImage){
+            throw new ApiError(400, "Image not uploaded");
+        }
         const post = await Post.create({
             userId,
             title,
             description,
-            image
+            image: postImage?.url
         })
         const data:object = {
             post
@@ -66,6 +77,77 @@ export const getPost = async (req: UserRequest, res: Response) => {
         }
     }
 };
+
+export const deletePost = async(req:UserRequest, res:Response) => {
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const postId = req.params.id;
+        const result = await Post.findByIdAndDelete(postId);
+        if(!result){
+            throw new ApiError(401, "Some error occured while deleting post");
+        } 
+        res.status(200)
+        .json(new ApiResponse("Post deleted successfully",{},200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }
+        else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}
+
+export const savePost = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(400, "Unauthorized request");
+        }
+        const {postId} = req.body;
+        if(!postId){
+            throw new ApiError(400, "Post Id is required");
+        }
+        let savedPosts = await PostSaved.findOne({userId});
+        if(savedPosts){
+            if(savedPosts.posts.includes(postId)){
+                throw new ApiError(400, "Post is already saved");
+            }
+            savedPosts.posts.push(postId);
+            await savedPosts.save();
+
+        }else{
+            const newSavedPost = new PostSaved({
+                userId,
+                posts:[postId]
+            });
+            await newSavedPost.save();
+        }
+        savedPosts = await PostSaved.findOne({userId});
+        const data = {
+            savedPosts
+        }
+        res.status(201)
+        .json(new ApiResponse("Post saved",data,201));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}
 
 export const addComment = async (req: UserRequest, res: Response) => {
     try{
@@ -136,7 +218,7 @@ export const likePost = async (req:UserRequest, res:Response) => {
 export const dislikePost = async(req:UserRequest, res:Response)=>{
     try{
         const userId = req.user._id;
-        if(userId){
+        if(!userId){
             throw new ApiError(400, "Unauthorized request");
         }
         const {postId} = req.body;
@@ -150,50 +232,6 @@ export const dislikePost = async(req:UserRequest, res:Response)=>{
         }
         res.status(200)
         .json(new ApiResponse("Post disliked",{},200));
-    }
-    catch(err){
-        const customErr = err as CustomError;
-        if(customErr.message){
-            res.status(customErr.statusCode)
-            .json(customErr.message);
-        }else{
-            res.status(500)
-            .json("Some error occured!");
-        }
-    }
-}
-
-export const savePost = async(req:UserRequest, res:Response)=>{
-    try{
-        const userId = req.user._id;
-        if(!userId){
-            throw new ApiError(400, "Unauthorized request");
-        }
-        const {postId} = req.body;
-        if(!postId){
-            throw new ApiError(400, "Post Id is required");
-        }
-        let savedPosts = await PostSaved.findOne({userId});
-        if(savedPosts){
-            if(savedPosts.posts.includes(postId)){
-                throw new ApiError(400, "Post is already saved");
-            }
-            savedPosts.posts.push(postId);
-            await savedPosts.save();
-
-        }else{
-            const newSavedPost = new PostSaved({
-                userId,
-                posts:[postId]
-            });
-            await newSavedPost.save();
-        }
-        savedPosts = await PostSaved.findOne({userId});
-        const data = {
-            savedPosts
-        }
-        res.status(201)
-        .json(new ApiResponse("Post saved",data,201));
     }
     catch(err){
         const customErr = err as CustomError;

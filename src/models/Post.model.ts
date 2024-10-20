@@ -16,7 +16,9 @@ const postSchema = new Schema<PostModel>({
         required:true
     },
     image:{
-        type:String
+        type:String,
+        required:false,
+        default:"",
     },
     likes:{
         type:Number,

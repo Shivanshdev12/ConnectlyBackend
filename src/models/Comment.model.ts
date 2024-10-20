@@ -15,7 +15,7 @@ const commentSchema = new Schema<CommentModel>(
         replies:[
             {
                 type:Schema.Types.ObjectId,
-                ref:"User"
+                ref:"Comment"
             }
         ]
     },{
