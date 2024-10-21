@@ -3,6 +3,11 @@ import bcrypt from "bcrypt";
 import { Register } from "../model";
 
 const userSchema = new Schema<Register>({
+    coverImage:{
+        type:String,
+        required:false,
+        default:""
+    },
     avatar:{
         type:String,
         required:false,
@@ -23,7 +28,18 @@ const userSchema = new Schema<Register>({
     password:{
         type:String,
         required:true
-    }
+    },
+    followers:[{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+        default:[]
+    }],
+
+    following:[{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+        default:[]
+    }]
 },{
     timestamps:true
 });

@@ -64,7 +64,7 @@ export const getPost = async (req: UserRequest, res: Response) => {
                 path: 'replies',  // For each comment, populate replies
             }
         })
-        .populate('userId'); // Populating the 'comments' field
+        .populate('userId');
 
         if (!posts || posts.length === 0) {
             throw new ApiError(404, "No Posts found");
@@ -84,6 +84,31 @@ export const getPost = async (req: UserRequest, res: Response) => {
         }
     }
 };
+
+export const getUserPost = async (req:UserRequest, res:Response) => {
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401,"Unauthorized request");
+        }
+        const userPosts = await Post.find({userId});
+        const data = {
+            userPosts
+        }
+        res.status(200)
+        .json(new ApiResponse("User posts fetched successfully", data, 200));
+    }   
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }else{
+            res.status(500)
+            .json("Some error occured");
+        }
+    }
+}
 
 export const deletePost = async(req:UserRequest, res:Response) => {
     try{

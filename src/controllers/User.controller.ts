@@ -121,3 +121,64 @@ export const getUser = async(req:UserRequest, res:Response)=>{
         }
     }
 }
+
+export const editAvatar = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }
+        else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}
+
+export const addCoverImage = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const coverImages = req.files as { [fieldname:string]: Express.Multer.File[]} | undefined;
+
+        const coverImageLocalPath = coverImages?.coverImage?.[0].path;
+
+        if(!coverImageLocalPath){
+            throw new ApiError(400, "Cover image is required");
+        }
+        const cover = await uploadOnCloudinary(coverImageLocalPath);
+        if (!cover) {
+            throw new ApiError(400, "Cover Image is required");
+        }
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+        user.coverImage = cover.url;
+        await user.save();
+        res.status(200)
+        .json(new ApiResponse("Cover Image updated",{},200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }
+        else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}

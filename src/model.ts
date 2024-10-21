@@ -1,12 +1,16 @@
 import { Request } from "express";
 import { Schema, Types } from "mongoose";
+import { Type } from "typescript";
 
 export interface Register{
+    coverImage:String,
     avatar:String,
     firstName:string;
     lastName:string;
     email:string;
     password:string;
+    followers:Types.ObjectId[],
+    following:Types.ObjectId[],
     isPasswordCorrect:(password:string)=>{}
 }
 
