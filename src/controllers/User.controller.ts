@@ -128,6 +128,24 @@ export const editAvatar = async(req:UserRequest, res:Response)=>{
         if(!userId){
             throw new ApiError(401, "Unauthorized request");
         }
+        const avatarFiles = req.files as {[fieldName: string]: Express.Multer.File[]} | undefined;
+        const avatarLocalPath = avatarFiles?.avatar?.[0].path;
+        if(!avatarLocalPath){
+            throw new ApiError(400, "Avatar file is required");
+        }
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+        if (!avatar) {
+            throw new ApiError(400, "Avatar file is required");
+        }
+        
+        const user = await User.findById(userId);
+        if(!user){
+            throw new ApiError(404, "User not found");
+        }
+        user.avatar = avatar?.url;
+        await user.save();
+        res.status(200)
+        .json(new ApiResponse("Avatar image updated",{},200));
 
     }
     catch(err){
@@ -179,6 +197,39 @@ export const addCoverImage = async(req:UserRequest, res:Response)=>{
         else{
             res.status(500)
             .json("Some error occured!");
+        }
+    }
+}
+
+export const followUser = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const {userToFollowId} = req.body;
+        const user = await User.findById(userToFollowId);
+        if(!user){
+            throw new ApiError(400, "Requested user doesn't exist");
+        }
+        let followersList = await User.findById(userId);
+        if(followersList?.following.includes(userToFollowId)){
+            throw new ApiError(400, "Already following this user");
+        }
+        followersList?.following.push(userToFollowId);
+        await followersList?.save();
+        res.status(200)
+        .json(new ApiResponse("Following this user",{},200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message)
+        }
+        else{
+            res.status(500)
+            .json("Some error occured");
         }
     }
 }

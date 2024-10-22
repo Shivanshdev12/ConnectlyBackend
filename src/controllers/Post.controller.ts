@@ -60,11 +60,23 @@ export const getPost = async (req: UserRequest, res: Response) => {
         const posts = await Post.find({})
         .populate({
             path: 'comments',  // Populate comments
-            populate: {
-                path: 'replies',  // For each comment, populate replies
-            }
+            populate:[
+                {
+                    path:"replies",
+                    populate:{
+                        path:"userId",
+                        model:"User",
+                        select:"-password"
+                    }
+                },
+                {
+                    path:"userId",
+                    model:"User",
+                    select:"-password"
+                }
+            ]
         })
-        .populate('userId');
+        .populate('userId').select("-password");
 
         if (!posts || posts.length === 0) {
             throw new ApiError(404, "No Posts found");
