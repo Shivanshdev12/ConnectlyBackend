@@ -32,12 +32,12 @@ export const registerUser = async (req: Request,res: Response)=>{
         }
 
         const avatar = await uploadOnCloudinary(avatarLocalPath);
-        if (!avatar) {
-            throw new ApiError(400, "Avatar file is required")
-        }
+        // if (!avatar) {
+        //     throw new ApiError(400, "Avatar file is required")
+        // }
 
         const user = await User.create({
-            avatar: avatar.url,
+            avatar: avatar?.secure_url || "",
             firstName,
             lastName,
             email,
@@ -212,12 +212,12 @@ export const followUser = async(req:UserRequest, res:Response)=>{
         if(!user){
             throw new ApiError(400, "Requested user doesn't exist");
         }
-        let followersList = await User.findById(userId);
-        if(followersList?.following.includes(userToFollowId)){
+        let userfollowersList = await User.findById(userId);
+        if(userfollowersList?.following.includes(userToFollowId)){
             throw new ApiError(400, "Already following this user");
         }
-        followersList?.following.push(userToFollowId);
-        await followersList?.save();
+        userfollowersList?.following.push(userToFollowId);
+        await userfollowersList?.save();
         res.status(200)
         .json(new ApiResponse("Following this user",{},200));
     }
@@ -228,6 +228,32 @@ export const followUser = async(req:UserRequest, res:Response)=>{
             .json(customErr.message)
         }
         else{
+            res.status(500)
+            .json("Some error occured");
+        }
+    }
+}
+
+export const getFollowingforUser = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const followingList = await User.findById(userId).populate("following").select("following");
+        const data = {
+            followingList,
+        }
+        res.status(200)
+        .json(new ApiResponse("Following list fetched successfully",data,200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.statusCode)
+        {
+            res.status(customErr.statusCode)
+            .json(customErr.message);
+        }else{
             res.status(500)
             .json("Some error occured");
         }

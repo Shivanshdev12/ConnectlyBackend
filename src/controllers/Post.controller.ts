@@ -153,7 +153,7 @@ export const savePost = async(req:UserRequest, res:Response)=>{
     try{
         const userId = req.user._id;
         if(!userId){
-            throw new ApiError(400, "Unauthorized request");
+            throw new ApiError(401, "Unauthorized request");
         }
         const {postId} = req.body;
         if(!postId){
@@ -233,7 +233,7 @@ export const likePost = async (req:UserRequest, res:Response) => {
     try{
         const userId = req.user._id;
         if(!userId){
-            throw new ApiError(400, "Unauthorized request");
+            throw new ApiError(401, "Unauthorized request");
         }
         const {postId} = req.body;
         const post = await Post.findByIdAndUpdate(
@@ -263,12 +263,12 @@ export const dislikePost = async(req:UserRequest, res:Response)=>{
     try{
         const userId = req.user._id;
         if(!userId){
-            throw new ApiError(400, "Unauthorized request");
+            throw new ApiError(401, "Unauthorized request");
         }
         const {postId} = req.body;
         const post = await Post.findByIdAndUpdate(
             postId,
-            {$inc:{dislikes:1}},
+            {$inc:{likes:-1}},
             {new:true}
         );
         if(!post){
