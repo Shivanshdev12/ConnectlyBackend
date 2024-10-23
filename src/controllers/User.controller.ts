@@ -77,7 +77,7 @@ export const loginUser = async (req:Request, res:Response)=>{
         const token = await generateAuthToken(user._id);
         const data = {
             user,
-            token
+            accessToken:token,
         }
         res.status(200)
         .cookie("accessToken",token)
@@ -92,6 +92,36 @@ export const loginUser = async (req:Request, res:Response)=>{
         else{
             res.status(500)
             .json("Some error occured!");
+        }
+    }
+}
+
+export const logoutUser = async (req:UserRequest, res:Response)=>{
+    try{
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $unset: {
+                    accessToken: 1 // this removes the field from document
+                }
+            },
+            {
+                new: true
+            }
+        )
+        res
+        .status(200)
+        .clearCookie("accessToken")
+        .json(new ApiResponse("User logged Out",{},200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message)
+        }else{
+            res.status(500)
+            .json("Some error occured");
         }
     }
 }

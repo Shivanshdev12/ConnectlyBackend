@@ -34,7 +34,6 @@ const userSchema = new Schema<Register>({
         ref:"User",
         default:[]
     }],
-
     following:[{
         type:Schema.Types.ObjectId,
         ref:"User",
@@ -45,7 +44,7 @@ const userSchema = new Schema<Register>({
 });
 
 userSchema.pre("save", async function(next){
-    if(!this.isModified()) return next();
+    if(!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 10);
     return next();
 });
