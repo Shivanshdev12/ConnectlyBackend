@@ -1,6 +1,5 @@
 import { Request } from "express";
-import { Schema, Types } from "mongoose";
-import { Type } from "typescript";
+import { Types } from "mongoose";
 
 export interface Register{
     coverImage:String,
@@ -39,4 +38,9 @@ export interface CustomError extends Error{
     statusCode:number;
     data:object;
     message:string;
+}
+
+export interface Notification {
+    type: string;
+    message: string;
 }
