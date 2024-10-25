@@ -12,6 +12,10 @@ const commentSchema = new Schema<CommentModel>(
             required:true,
             default:""
         },
+        likes:{
+            type:Number,
+            default:0,
+        },
         replies:[
             {
                 type:Schema.Types.ObjectId,

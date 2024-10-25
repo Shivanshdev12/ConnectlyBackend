@@ -15,6 +15,7 @@ export interface Register{
 
 export interface CommentModel{
     userId:Types.ObjectId,
+    likes:number,
     comments:string,
     replies:Types.ObjectId[]
 }

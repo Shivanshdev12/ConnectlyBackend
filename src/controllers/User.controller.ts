@@ -152,6 +152,33 @@ export const getUser = async(req:UserRequest, res:Response)=>{
     }
 }
 
+export const getAllUser = async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const users = await User.find({});
+        if(users.length<=0){
+            throw new ApiError(401, "No user found");
+        }
+        const data={users}
+        res.status(200)
+        .json(new ApiResponse("User list fetched",data,200));
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.statusCode){
+            res.status(customErr.statusCode)
+            .json(customErr.message)
+        }
+        else{
+            res.status(500)
+            .json("Some error occured!");
+        }
+    }
+}
+
 export const editAvatar = async(req:UserRequest, res:Response)=>{
     try{
         const userId = req.user._id;
@@ -248,6 +275,8 @@ export const followUser = async(req:UserRequest, res:Response)=>{
         }
         userfollowersList?.following.push(userToFollowId);
         await userfollowersList?.save();
+        user.followers.push(userId);
+        await user.save();
         res.status(200)
         .json(new ApiResponse("Following this user",{},200));
     }

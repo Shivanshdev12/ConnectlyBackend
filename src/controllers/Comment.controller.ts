@@ -40,3 +40,30 @@ export const replyComment=async(req:UserRequest, res:Response)=>{
         }
     }
 }
+
+export const likeComment=async(req:UserRequest, res:Response)=>{
+    try{
+        const userId = req.user._id;
+        if(!userId){
+            throw new ApiError(401, "Unauthorized request");
+        }
+        const commentId = req.params.id;
+        if(!commentId){
+            throw new ApiError(400, "Comment not found");
+        }
+        const comment = await Comment.findById(commentId);
+        if(!comment){
+            throw new ApiError(400, "Comment not found");
+        }
+    }
+    catch(err){
+        const customErr = err as CustomError;
+        if(customErr.message){
+            res.status(customErr.statusCode)
+            .json(customErr.message)
+        }else{
+            res.status(500)
+            .json("Some error occured");
+        }
+    }
+}
